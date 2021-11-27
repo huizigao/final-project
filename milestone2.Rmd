@@ -1,0 +1,407 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+     install.packages("BiocManager")
+BiocManager::install("Homo.sapiens")
+```
+
+
+
+
+
+```{r}
+library(Glimma)
+library(edgeR)
+library(limma)
+library(Homo.sapiens)
+library(stringr)
+```
+
+
+
+```{r}
+setwd("/Users/gaohuizi/desktop/510project-gao/whitefemale")
+
+```
+
+```{r}
+file_wf <- c("WFNS1.htseq.counts",
+               "WFNS2.htseq.counts",
+               "WFNS3.htseq.counts",
+               "WFNS4.htseq.counts",
+               "WFNS5.htseq.counts",
+               "WFNS6.htseq.counts",
+               "WFNS7.htseq.counts",
+               "WFNS8.htseq.counts",
+               "WFNS9.htseq.counts",
+               "WFNS10.htseq.counts",
+               "WFNS11.htseq.counts",
+               "WFNS12.htseq.counts",
+               "WFNS13.htseq.counts",
+               "WFNS14.htseq.counts",
+               "WFNS15.htseq.counts",
+               "WFNS16.htseq.counts",
+               "WFNS17.htseq.counts",
+               "WFNS18.htseq.counts",
+               "WFNS19.htseq.counts",
+               "WFNS20.htseq.counts",
+               "WFNS21.htseq.counts",
+               "WFNS22.htseq.counts",
+               "WFNS23.htseq.counts",
+               "WFNS24.htseq.counts",
+               "WFNS25.htseq.counts",
+               "WFNS26.htseq.counts",
+               "WFNS27.htseq.counts",
+               "WFNS28.htseq.counts",
+               "WFNS29.htseq.counts",
+               "WFNS30.htseq.counts",
+               "WFNS31.htseq.counts",
+               "WFNS32.htseq.counts",
+               "WFS1.htseq.counts",
+               "WFS2.htseq.counts",
+               "WFS3.htseq.counts",
+               "WFS4.htseq.counts",
+               "WFS5.htseq.counts",
+               "WFS6.htseq.counts",
+               "WFS7.htseq.counts",
+               "WFS8.htseq.counts",
+               "WFS9.htseq.counts",
+               "WFS10.htseq.counts",
+               "WFS11.htseq.counts",
+               "WFS12.htseq.counts",
+               "WFS13.htseq.counts",
+               "WFS14.htseq.counts",
+               "WFS15.htseq.counts",
+               "WFS16.htseq.counts",
+               "WFS17.htseq.counts",
+               "WFS18.htseq.counts",
+               "WFS19.htseq.counts",
+               "WFS20.htseq.counts",
+               "WFS21.htseq.counts",
+               "WFS22.htseq.counts",
+               "WFS23.htseq.counts",
+               "WFS24.htseq.counts",
+               "WFS25.htseq.counts",
+               "WFS26.htseq.counts",
+               "WFS27.htseq.counts",
+               "WFS28.htseq.counts",
+               "WFS29.htseq.counts",
+               "WFS30.htseq.counts",
+               "WFS31.htseq.counts",
+               "WFS32.htseq.counts",
+               "WFS33.htseq.counts",
+               "WFS34.htseq.counts",
+               "WFS35.htseq.counts",
+               "WFS36.htseq.counts",
+               "WFS37.htseq.counts",
+               "WFS38.htseq.counts",
+               "WFS39.htseq.counts",
+               "WFS40.htseq.counts",
+               "WFS41.htseq.counts",
+               "WFS42.htseq.counts",
+               "WFS43.htseq.counts",
+               "WFS44.htseq.counts")
+```
+
+
+```{r}
+read.delim(file_wf[1], header=FALSE)
+```
+
+
+```{r}
+getwd()
+```
+
+```{r}
+x <- readDGE(file_wf, columns=c(1,2))
+
+```
+
+```{r}
+class(x)
+
+```
+
+```{r}
+dim(x)
+
+```
+
+```{r}
+samplenames<-colnames(x)
+sampleNames
+```
+
+```{r}
+colnames(x) <- samplenames
+```
+
+```{r}
+group <- c(rep("WFNS",32), rep("WFS",44))
+```
+
+```{r}
+x$samples$group <- group
+x$samples
+
+```
+
+
+
+```{r}
+install.packages("gsubfn")
+
+```
+
+```{r}
+library("gsubfn")
+```
+
+```{r}
+geneid <- rownames(x)
+geneid <-gsub("\\.[0-9]*$","", geneid)
+head(geneid)
+```
+
+```{r}
+genes <- select(Homo.sapiens, keys=geneid, columns=c("SYMBOL", "TXCHROM"), 
+                keytype="ENSEMBL")
+```
+
+```{r}
+head(genes)
+
+```
+
+```{r}
+genes <- genes[!duplicated(genes$ENSEMBL),]
+x$genes <- genes
+x
+```
+
+```{r}
+cpm <- cpm(x)
+lcpm <- cpm(x, log=TRUE)
+```
+
+```{r}
+L <- mean(x$samples$lib.size) * 1e-6
+M <- median(x$samples$lib.size) * 1e-6
+c(L, M)
+
+```
+
+```{r}
+summary(lcpm)
+
+```
+```{r}
+table(rowSums(x$counts==0)==9)
+
+```
+
+```{r}
+keep.exprs <- filterByExpr(x, group=group)
+x <- x[keep.exprs,, keep.lib.sizes=FALSE]
+dim(x)
+
+```
+
+```{r}
+lcpm.cutoff <- log2(10/M + 2/L)
+library(RColorBrewer)
+nsamples <- ncol(x)
+col <- brewer.pal(nsamples, "Paired")
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="A. Raw data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+lcpm <- cpm(x, log=TRUE)
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="B. Filtered data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+
+```
+
+```{r}
+x <- calcNormFactors(x, method = "TMM")
+x$samples$norm.factors
+
+```
+
+```{r}
+x2 <- x
+x2$samples$norm.factors <- 1
+x2$counts[,1] <- ceiling(x2$counts[,1]*0.05)
+x2$counts[,2] <- x2$counts[,2]*5
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="A. Example: Unnormalised data",ylab="Log-cpm")
+x2 <- calcNormFactors(x2)  
+x2$samples$norm.factors
+
+```
+
+```{r}
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="B. Example: Normalised data",ylab="Log-cpm")
+
+```
+```{r}
+lcpm <- cpm(x, log=TRUE)
+par(mfrow=c(1,2))
+group
+
+```
+
+```{r}
+levels(group) <-  brewer.pal(nlevels(group), "Set1")
+```
+
+```{r}
+col.group <- as.character(group)
+col.group <- c("purple","orange")[group]
+plotMDS(lcpm, labels=group, col=col.group)
+title(main="A. Sample groups")
+
+```
+```{r}
+glMDSPlot(lcpm,groups = group)
+
+```
+
+```{r}
+design <- model.matrix(~0+group)
+colnames(design) <- gsub("group", "", colnames(design))
+design
+
+```
+```{r}
+contr.matrix <- makeContrasts(
+   WFNSVsWFS = WFNS-WFS, 
+   levels = colnames(design))
+contr.matrix
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+v <- voom(x, design, plot=TRUE)
+v
+```
+
+```{r}
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+efit <- eBayes(vfit)
+plotSA(efit, main="Final model: Mean-variance trend")
+
+```
+```{r}
+summary(decideTests(efit))
+```
+
+```{r}
+tfit <- treat(vfit, lfc=1)
+dt <- decideTests(tfit)
+summary(dt)
+
+```
+
+```{r}
+de.common <- which(dt[,1]!=0)
+length(de.common)
+
+```
+
+```{r}
+head(tfit$genes$SYMBOL[de.common], n=76)
+```
+
+```{r}
+vennDiagram(dt[,1], circle.col=c("turquoise", "salmon"))
+
+```
+```{r}
+write.fit(tfit, dt, file="results.txt")
+
+
+```
+
+```{r}
+WFNS.vs.WFS <- topTreat(tfit, coef=1, n=Inf)
+head(WFNS.vs.WFS)
+```
+
+```{r}
+plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], 
+       xlim=c(-8,13))
+```
+```{r}
+glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
+         side.main="ENSEMBL", counts=lcpm, groups=group, launch=TRUE)
+```
+
+```{r}
+install.packages("gplots")
+
+```
+
+
+```{r}
+library("gplots")
+```
+
+```{r}
+# get heatmap of log-CPM values
+library(gplots)
+```
+
+
+
+
+```{r}
+
+WFNS.vs.WFS.topgenes <- WFNS.vs.WFS$ENSEMBL[1:50]
+i <- which(v$genes$ENSEMBL %in% WFNS.vs.WFS.topgenes)
+mycol <- colorpanel(1000,"blue","white","red")
+par(cex.main=0.8,mar=c(1,1,1,1))
+heatmap.2(lcpm[i,],  scale="row", labRow=v$genes$SYMBOL[i], labCol=group, col=mycol, cexRow=1,cexCol=0.2, margins = c(8,6), main="HeatMap")
+```
+
+```
+
+")
+```
+
+```
+
