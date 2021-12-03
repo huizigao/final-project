@@ -6,7 +6,6 @@ clinical.white.female/
 results.txt
 gdc_manifest_20211126_221318.txt
 .Rproj.user
-*.html
 gdc-client
 .Rhistory
 .RData
