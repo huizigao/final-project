@@ -7,6 +7,7 @@ clinical.white.female/
 results.txt
 gdc_manifest_20211126_221318.txt
 .Rproj.user
-milestone2.nb.html
+*.html
 gdc-client
 .Rhistory
+.RData
