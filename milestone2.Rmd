@@ -3,6 +3,7 @@ title: "R Notebook"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -161,7 +162,9 @@ x$samples
 
 
 ```{r}
-install.packages("gsubfn")
+
+if (!require("gsubfn"))
+  install.packages("gsubfn")
 
 ```
 
@@ -375,7 +378,9 @@ glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
 ```
 
 ```{r}
-install.packages("gplots")
+
+if (!require("gplots"))
+  install.packages("gplots")
 
 ```
 
@@ -401,10 +406,5 @@ par(cex.main=0.8,mar=c(1,1,1,1))
 heatmap.2(lcpm[i,],  scale="row", labRow=v$genes$SYMBOL[i], labCol=group, col=mycol, cexRow=1,cexCol=0.2, margins = c(8,6), main="HeatMap")
 ```
 
-```
 
-")
-```
-
-```
 
